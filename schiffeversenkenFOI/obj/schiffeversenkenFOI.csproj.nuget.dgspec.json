@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Dokumente\\Schule\\schiffeversenkenFOI-master\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj": {}
+    "C:\\Users\\account\\source\\repos\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj": {}
   },
   "projects": {
-    "E:\\Dokumente\\Schule\\schiffeversenkenFOI-master\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj": {
+    "C:\\Users\\account\\source\\repos\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Dokumente\\Schule\\schiffeversenkenFOI-master\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj",
+        "projectUniqueName": "C:\\Users\\account\\source\\repos\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj",
         "projectName": "schiffeversenkenFOI",
-        "projectPath": "E:\\Dokumente\\Schule\\schiffeversenkenFOI-master\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj",
-        "packagesPath": "C:\\Users\\AL\\.nuget\\packages\\",
-        "outputPath": "E:\\Dokumente\\Schule\\schiffeversenkenFOI-master\\schiffeversenkenFOI\\schiffeversenkenFOI\\obj\\",
+        "projectPath": "C:\\Users\\account\\source\\repos\\schiffeversenkenFOI\\schiffeversenkenFOI\\schiffeversenkenFOI.csproj",
+        "packagesPath": "C:\\Users\\account\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\account\\source\\repos\\schiffeversenkenFOI\\schiffeversenkenFOI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\AL\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\account\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,6 +26,7 @@
         },
         "frameworks": {
           "netcoreapp3.1": {
+            "targetAlias": "netcoreapp3.1",
             "projectReferences": {}
           }
         },
@@ -37,6 +38,7 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
+          "targetAlias": "netcoreapp3.1",
           "imports": [
             "net461",
             "net462",
@@ -52,7 +54,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.408\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.103\\RuntimeIdentifierGraph.json"
         }
       }
     }

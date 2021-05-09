@@ -44,6 +44,7 @@ namespace schiffeversenkenFOI
             //////////////////////////////////////////////////
             ///         Spielfelder editieren
             //////////////////////////////////////////////////
+            
             BuildingPhase(player, 5);                               //hier werden die verschiedenen Schiffe plaziert mit den Angaben des Spielers, diese werden in den Funktionen abgefragt
             BuildingPhase(player, 4);
             BuildingPhase(player, 3);
@@ -55,29 +56,32 @@ namespace schiffeversenkenFOI
             BuildingPhase_KI(ki, 3);
             BuildingPhase_KI(ki, 2);
             BuildingPhase_KI(ki, 2);
-
-            Field shadow = ki.Clone_to_field_visible_to_player();   //Das Feld, welches der Spieler sehen darf, um seine Treffer zu sehen ist. Das Feld ist eine Art Kopie des KI Feldes. Dieses Feld trägt den Namen shadow(Schatten), weil ich es passend fand. Dieses Feld ist nicht identisch wie eine Kopie sondern ungenauer wie ein Schatten.
-
             //////////////////////////////////////////////////
             ///         Spiel starten
             //////////////////////////////////////////////////
 
-            Field.DrawUI_inGame(player, ki);                    //Das Spiel Wird aus den Spielfeldern des Spielers und des Schattens gezeichnet
-            string eingabe;                                         //Der String eingabe wird deklariert
-
-            do {
-                do                                                      //in der Schleife wird wiederholt, bis die Eingabe passend ist
+            Field.DrawUI_inGame(player, ki.Clone_to_field_visible_to_player());                    // Erste Zeichnung der Spielfelder
+            string eingabe;                                         //Deklaration string Eingabe, welches für die Eingabe zuständig ist.
+            bool success = false;
+            do
+            {
+                while (success == false)                            // Anfang einer While-Schleife mit try-catch statements, um schwerwiegende Fehler und Exceptions durch ungültigen Eingaben zu umgehen. 
                 {
-                    Console.Write("Coordinats: ");
-                    eingabe = Console.ReadLine();                       //Der string wird deklariert
-
-                } while (ki.Make_a_move(Convert.ToInt32(eingabe[0]) - 97, Convert.ToInt32(eingabe[1]) - 48));   //hier wird die eingabe getestet + die Bedingung wird hier ausgeführt
-                player.Make_a_move(0, 0);                               //beim Spieler wird automatisch gespielt, die Eingabe ist also egal
-                shadow = ki.Clone_to_field_visible_to_player();
-                Field.DrawUI_inGame(player, ki);                        //hier kommt shadow hin
-            } while (!(player.Has_lost() | ki.Has_lost()));
-            
-            Console.Clear();
+                    try
+                    {
+                        Console.Write("Coordinates: ");
+                        eingabe = Console.ReadLine();                       //Holt input des Spielers
+                        if (ki.Make_a_move(Convert.ToInt32(eingabe[0]) - 97, Convert.ToInt32(eingabe[1]) - 48)) success = true;     // Die Funktion Make_a_move beinhaltet weitere Prüfungen, um sicherzustellen, das die Eingabe gültig war.
+                        else success = false;
+                    }
+                    catch { success = false; }
+                 }
+                player.Make_a_move(0, 0);                               //beim Spieler wird automatisch gespielt, die Eingabe ist also egal              
+                Field.DrawUI_inGame(player, ki.Clone_to_field_visible_to_player()); //Zeichnet das Spielfeld, nachdem alle Eingaben für eine Runde durchgegangen sind.
+                success = false;                                        //Bereitet wieder die Haupt While-Schleife vor.
+            } 
+            while (!(player.Has_lost() | ki.Has_lost()));               //Wiederholt alle abfragen der Eingabe falls noch kein Sieger festgestellt wurde.
+    Console.Clear();
             if (player.Has_lost())
             {
                 //ascii-art wenn der Spieler verliert
@@ -106,108 +110,121 @@ namespace schiffeversenkenFOI
         {
             player.Draw_field();                                    //hier wird nur das Feld des Spielers abgebildet, noch ist es leer
             Console.Write("\n\t\tPlacing the Battleship.\n[0]Horizontal -\n  or \n[1]Vertical |\nAnswer please with 0 or 1:");  // der Spieler wird gefragt, ob das Schiff horizontal oder Vertikal plaziert werden soll
-            bool horizontal = Convert.ToBoolean(Convert.ToInt16(Console.ReadLine()));               //Die Antwort, die nur 0 oder 1, betragen kann wird in einen bool umgewandelt. false = horizontal, true = vertikal
-            string koordinaten;                                                                     //Der String koordinaten wird deklariert da diese in form von a5 oder g0 eingegeben werden
-            do                                                                                      //Eine do-while-Schleife fängt hier an
+            string koordinaten;                                                                        //Der String koordinaten wird deklariert da diese in form von a5 oder g0 eingegeben werden
+            try                                                                                        // Error handling, falls jemand auf die Idee kommt etwas einzugeben, was nicht 0 oder 1 wäre.
             {
-                player.Draw_field();                                                                    //Das Spieler feld wird wieder gezeichnet, um nicht von vorher die Frage sehen zu können
-                if (!horizontal)                                                                        //hier wird ausgewählt welcher pfad ausgegeben werden soll aufgrund von der horizontalen oder vertikalen
+                byte choice = (Convert.ToByte(Console.ReadLine()));
+                if (choice < 2)
                 {
-                    Console.Write("\n\t\tWhere schould be the Battleship placed?(give the coordinate as CharacterInteger example: a5\nDominat side ->#####):");
+                    bool choicebool = Convert.ToBoolean(choice);                                                            //Konvertiert den Input 
+                    do                                                                                      //Eine do-while-Schleife fängt hier an
+                    {
+                        player.Draw_field();                                                                    //Das Spieler feld wird wieder gezeichnet, um nicht von vorher die Frage sehen zu können
+                        if (!choicebool)                                                                        //hier wird ausgewählt welcher pfad ausgegeben werden soll aufgrund von der horizontalen oder vertikalen
+                            Console.Write("\n\t\tWhere should the Battleship be placed?\n(Give the coordinate in following format: Letter, Number. Example: a5)\nOrientation of ship:  ->#####):");
+                        else
+                            Console.Write("\nWhere should the Battleship be placed?\n(Give the coordinate in following format: Letter, Number. Example: a5)\nOrientation of ship: -> #\n\t\t#\n\t\t#\n\t\t#\n\t\t#):");
+                        koordinaten = Console.ReadLine();                                                       //Die Koordinaten werden erst hier in der Schleife abgefragt, nach dem die Fragegestellt worden ist
+                    } 
+                    while (player.Place_ship(ship_size, choicebool, koordinaten));                                  //hier wird das 5-er Schiff eingezeichnet nach den eingegebenen angaben. falls ein fehler passiert wird das spieler Feld neugezeichenet und die Frage erneut gestellt bis diese richtig beantwortet ist.
                 }
-                else
-                {
-                    Console.Write("\nWhere schould be the Battleship placed?(give the coordinate as CharacterInteger example: a5\nDominat side -> #\n\t\t#\n\t\t#\n\t\t#\n\t\t#):");
-                }
-                koordinaten = Console.ReadLine();                                                       //Die Koordinaten werden erst hier in der Schleife abgefragt, nach dem die Fragegestellt worden ist
-            } while (player.Place_ship(ship_size, horizontal, koordinaten));                                  //hier wird das 5-er Schiff eingezeichnet nach den eingegebenen angaben. falls ein fehler passiert wird das spieler Feld neugezeichenet und die Frage erneut gestellt bis diese richtig beantwortet ist.
-
-        }
+                else throw new DivideByZeroException();                                                          //Es gibt sicherlich bessere Wege, einen Fehler zu erzwingen um zum catch-statement zu wechseln, aber diese Methode ist lustiger und funktioniert auch gut.
+            }
+            catch
+            {
+                BuildingPhase(player, ship_size);
+            }
+    }
 
         class Field
         {
-            private char[,] casket = new char[10,10];                   //Die einzelnen Kästchen sind als array casket gespeichert(casket ist eng. und bedeutet kästchen). Es ist ein Char-Array da alle Kästchen ein Zeichen enthalten werden
-            private readonly bool ki;                                   //Dieser bool speichert ob dieses Feld eine KI ist oder nicht
-            private readonly List<string> possebilieties;               //Dies ist eine Liste, welche alle versuche speichert.
+            private char[,] box = new char[10,10];                   //Die einzelnen Kästchen sind als array elemente box gespeichert. Wir benutzen einen Char-Array, da alle Kästchen nur ein Zeichen enthalten werden
+            private readonly bool ki;                                   //Dieser bool speichert ob dieses Feld von der KI besetzt ist oder nicht
+            private readonly List<string> possibilities = new List<string>();               //Dies ist eine Liste, welche alle versuche speichert.
             private byte winning_points = 16;
 
-            public Field(bool is_player = false)                            //hier wird der Wert den variablen casket und ki zugewiesen, falls kein Wert übergeben wird, an den Konstruktor, ist der Status der KI false also ausgeschaltet
+            public Field(bool is_player = false)                            //hier wird der Wert den variablen box und ki zugewiesen, falls kein Wert übergeben wird, an den Konstruktor, ist der Status der KI false also ausgeschaltet
             {
                 ki = is_player;                                             //zuweisung der Eingabe des Konstruktors in die Boolische variable
                 for (byte spalte = 0; spalte < 10; spalte++)            //Die Schleife geht alle spalten durch und spechert die Zahl
                 {
                     for (byte zeile = 0; zeile < 10; zeile++)           //Die Schleife geht alle Zeilen durch und spechert die Zahl
                     {
-                        casket[spalte, zeile] = '_';                    //Die gespeicherten Zahlen in casket eingesetzt um das Feld als leer zu markieren, mehr dazu oben in der Skizze
+                        box[spalte, zeile] = '_';                    //Die gespeicherten Zahlen in box eingesetzt um das Feld als leer zu markieren, mehr dazu oben in der Skizze
                     }
                 }
-                if (ki)                                                 //Falls KI wahr ist werden hier in possebilities die möglichekeiten aller Züge gespeichert
+                if (ki)                                                 //Falls KI wahr ist werden hier in possibilities alle möglichen Koordinaten gespeichert.
                 {
-                    possebilieties = new List<string>() {"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99" };
+                    for (int i = 0; i < 99; i++)
+                    {
+                        string newEntry = string.Format("{0:00}", i);
+                        possibilities.Add(newEntry);
+                    }
+                    Console.WriteLine("sex");
                 }
             }
 
-            public char Get_casket(byte spalte, byte zeile)             //casket ist privat eingestellt, deshalb um die werte der einzelnen Kästchen zu bekommen werden hier die indexe eingegeben als spalte und zeile und der Wert and dieser Stelle, im Array, wird zurückgegeben
+            public char Get_box(byte spalte, byte zeile)              //box ist privat eingestellt, deshalb um die werte der einzelnen Kästchen zu bekommen werden hier die indexe eingegeben als spalte und zeile und der Wert and dieser Stelle, im Array, wird zurückgegeben
             {
-                return casket[spalte, zeile];                           //Gibt den Wert an der Stelle von spalte, zeile zurück
+                return box[spalte, zeile];                            //Gibt den Wert an der Stelle von spalte, zeile zurück
             }
 
-            public bool Make_a_move(int spalte, int zeile)              //Fier wird ein Zug gemacht. Die KI braucht keine Angaben, nur der Spieler die Koordinaten als 2 Integer. Die Methode gibt einen bool zurück true heist kein Fehler und false ein Fehler 
+            public bool Make_a_move(int spalte, int zeile)               //Fier wird ein Zug gemacht. Die KI braucht keine Angaben, nur der Spieler die Koordinaten als 2 Integer. Die Methode gibt einen bool zurück true heist kein Fehler und false ein Fehler 
             {
-                if (ki)                                                 //hier wird die Variable player genutzt, um die Züge der KI zu automatisieren. Der Teil in der If-clause wird nur ausgeführt wenn das Feld dem Spieler gehört
+                if (ki)                                                  //hier wird die Variable player genutzt, um die Züge der KI zu automatisieren. Der Teil in der If-clause wird nur ausgeführt wenn das Feld dem Spieler gehört
                 {
-                    Random generator = new Random();                    //Ein Random Objekt wird erstellt, um zufallszahlen für die KI zu generieren
-                    string tmp = possebilieties[generator.Next(0, possebilieties.Count)];   //Die KI wählt von allen möglichen Feldern einen Zufälligen, welcher als String gespeichert ist
-                    possebilieties.Remove(tmp);                         //Um dieselbe Wahl nichtmehr treffen zu können wird das ausgewählte element gelöscht aus der liste!
-                    spalte = Convert.ToInt32(tmp[0] - 48);                   //Vom string wird der Index 0 in einen Integer umgewandelt und in der Variable spalte gespeichert
-                    zeile = Convert.ToInt32(tmp[1]) - 48;                    //Vom string wird der Index 1 in einen Integer umgewandelt und in der Variable zeile  gespeichert
+                    Random generator = new Random();                     //Ein Random Objekt wird erstellt, um zufallszahlen für die KI zu generieren
+                    string tmp = possibilities[generator.Next(0, possibilities.Count)];     //Die KI wählt von allen möglichen Feldern ein Zufälliges, welches als String gespeichert ist
+                    possibilities.Remove(tmp);                           //Um dieselbe Wahl nichtmehr treffen zu können wird das ausgewählte Element aus der Liste gelöscht!
+                    spalte = tmp[0] - 48;                                //Vom string wird der Index 0 in einen Integer umgewandelt und in der Variable spalte gespeichert
+                    zeile = tmp[1] - 48;                                 //Vom string wird der Index 1 in einen Integer umgewandelt und in der Variable zeile  gespeichert
                 }
                 try
                 {
-                    switch (casket[zeile, spalte])                      //Diese Stelle wird unabhängig ob man eine KI oder ein Spieler ist ausgeführt im switch-case wird im Feld die Koordinate and der Stelle spalte Zeile geändert, mehr dazu oben in der Skizze
+                    switch (box[zeile, spalte])                       //Diese Stelle wird, unabhängig ob man eine KI oder ein Spieler ist, ausgeführt. Im switch-case wird im Feld die Koordinate an der Stelle [Spalte [Zeile]] geändert, mehr dazu oben in der Skizze.
                     {
                         case '_':                                       //falls der case das Zeichen '_' annimmt 
-                            casket[zeile, spalte] = 'O';                //wird das Zeichen zu 'O' geändert, da ['_'= leer] und ['_'= verfehlt] bedeutet
+                            box[zeile, spalte] = 'O';                //wird das Zeichen zu 'O' geändert, da ['_'= leer] und ['_'= verfehlt] bedeutet
                             break;
                         case '#':                                       //falls der case das Zeichen '_' annimmt
-                            casket[zeile, spalte] = 'X';                //wird das Zeichen zu 'X' geändert, da ['X'= getroffen] und ['#'= Schiff] bedeutet
+                            box[zeile, spalte] = 'X';                //wird das Zeichen zu 'X' geändert, da ['X'= getroffen] und ['#'= Schiff] bedeutet
                             winning_points -= 1;                        //falls ein Teil des Schiffes getroffen worden ist wird ein winning point abgezogen
                             break;
-
                         default:
-                            return true;                               //Im falle das der Spieler eine Koordinate eingibt die genutzt worden ist, wird false für fehler zurückgegeben
+                            Console.Write("\nYou've already fired there!\n");
+                            return false;                               //Im falle das der Spieler eine Koordinate eingibt die genutzt worden ist, wird false für fehler zurückgegeben
                     }
 
-                    return false;                                        //Im normalfall wird true zurückgegeben, für keine Fehler
+                    return true;                                        //Im normalfall wird true zurückgegeben, für keine Fehler
                 }
                 catch (Exception)
                 {
 
-                    return true;
+                    return false;
                 }
             }
 
-            public Field Clone_to_field_visible_to_player()             //Hier wird ein Feld zurückgegeben anstatt mit Schiffen('#'), mit leeren Feldern('_')
+            public Field Clone_to_field_visible_to_player()             // Um es Fair zu halten wird hier ein Spielfeld generiert, welches die Schiffe nicht zeigt. Diese werden im Spiel-Loop benutzt.
             {
                 char[,] alternativ = new char[10, 10];              //hier wird ein Leeres Feld erstellt die Alternative (Kopie)
-                Field visible_to_player = new Field();              //Ein Objekt wird estellt der Klasse Feld
+                Field visible_to_player = new Field();              //Ein neues Feld Objekt wird erstellt.
 
                 for (byte spalte = 0; spalte < 10; spalte++)
                 {
                     for (byte zeile = 0; zeile < 10; zeile++)
                     {
-                        if (casket[spalte, zeile] == '#')
+                        if (box[spalte, zeile] == '#')
                         {
-                            alternativ[spalte, zeile] = '_';        //alle Felder werden eingesetzt und im falle von '#' durch '_' ersetzt
+                            alternativ[spalte, zeile] = '_';        //alle Felder werden eingesetzt, '#' wird durch '_' ersetzt
                         }
                         else
                         {
-                            alternativ[spalte, zeile] = casket[spalte, zeile];
+                            alternativ[spalte, zeile] = box[spalte, zeile];
                         }
                     }
                 }
-                visible_to_player.casket = alternativ;          //Die caskets in Felder werden durch alternativ ersetzt
-                return visible_to_player;                       //Das Objekt visible_to_player wird zurückgegeben
+                visible_to_player.box = alternativ;          //Die Boxen im alten Feld werden durch ihre Alternative ersetzt 
+                return visible_to_player;                       //Das neue Feld wird zurückgegeben
             }
 
             public bool Has_lost()                                          //Hier wird zurückgegeben ob man verloren hat; true = verloren
@@ -219,23 +236,23 @@ namespace schiffeversenkenFOI
                 return false;                                           //false = noch nicht verloren
             }
 
-            public static void DrawUI_inGame(Field playerField, Field visible_to_player)//Die Methode nimmt zwei Felder und bildet diese in der Konsole ab
+            public static void DrawUI_inGame(Field playerField, Field visible_to_player) //Die Methode nimmt zwei Felder und bildet diese in der Konsole ab
             {
                 Console.Clear();
-                Console.WriteLine("\n\n\n\n\n\t\t  A B C D E F G H I J\t\t  A B C D E F G H I J");//Hier wird ein Teil der Benennung der Koordinaten gezeichnet
-                for (byte spalte = 0; spalte < 10; spalte++)                //Die Schleife 1 speichert in "spalte" eine zahl von 1 bis 10
+                Console.WriteLine("\n\n\n\n\n\t\t  A B C D E F G H I J\t\t  A B C D E F G H I J"); //Hier wird ein Teil der Benennung der Koordinaten gezeichnet
+                for (byte spalte = 0; spalte < 10; spalte++)                                       //Die Schleife 1 speichert in "spalte" eine zahl von 1 bis 10
                 {                                                           
                     Console.Write("\t\t"+spalte);
-                    for (byte zeile = 0; zeile < 10; zeile++)              //Die Schleife 2 speichert in "zeile" eine zahl von 1 bis 10, dieser vorgang wird 10 wiederholt innerhalb Schleife 1. In Schleife 2 wird das Spieler Feld gezeichnet
+                    for (byte zeile = 0; zeile < 10; zeile++)                                       //Die Schleife 2 speichert in "zeile" eine zahl von 1 bis 10, dieser vorgang wird 10 wiederholt innerhalb Schleife 1. In Schleife 2 wird das Spieler Feld gezeichnet
                     {
-                        Console.Write("|" + playerField.Get_casket(spalte, zeile));         //In Schleife 2 wird im playerfield Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
+                        Console.Write("|" + playerField.Get_box(spalte, zeile));         //In Schleife 2 wird im playerfield Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
                     }
 
-                    Console.Write("|\t\t" + spalte);                                 //Da die Felder Neben einander Sind die der Ki und das des Spielers werden die Felder mit tabs getrennt
+                    Console.Write("|\t\t" + spalte);                                 // Extra Abstände durch tabs, damit beide Felder korrekt angezeigt werden
 
-                    for (byte zeile = 0; zeile < 10; zeile++)              //Die Scleife 3 speichert in "spalte" eine zahl von 1 bis 10, dieser vorgang wird 10 wiederholt innerhalb Schleife 1. In Schleife 2 wird das KI Feld gezeichnet
+                    for (byte zeile = 0; zeile < 10; zeile++)              //Die Schleife 3 speichert in "spalte" eine zahl von 1 bis 10, dieser vorgang wird 10 wiederholt innerhalb Schleife 1. In Schleife 2 wird das KI Feld gezeichnet
                     {
-                        Console.Write("|" + visible_to_player.Get_casket(spalte, zeile));             //In Schleife 3 wird im kiField Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
+                        Console.Write("|" + visible_to_player.Get_box(spalte, zeile));             //In Schleife 3 wird im kiField Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
                     }
                     Console.Write("|\n");                                   //die Nächste Zeile wird gezeichnet
                 }
@@ -250,7 +267,7 @@ namespace schiffeversenkenFOI
                     Console.Write("\t\t" + spalte);
                     for (byte zeile = 0; zeile < 10; zeile++)              //Die Schleife 2 speichert in "zeile" eine zahl von 1 bis 10, dieser vorgang wird 10 wiederholt innerhalb Schleife 1. In Schleife 2 wird das Spieler Feld gezeichnet
                     {
-                        Console.Write("|" + casket[spalte, zeile]);         //In Schleife 2 wird im playerfield Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
+                        Console.Write("|" + box[spalte, zeile]);         //In Schleife 2 wird im playerfield Array die Zeile und die Spalte der Ausgewählten zelle abgebildet hinter einem pipe zeichen
                     }
                     Console.WriteLine("|");
                 }
@@ -258,24 +275,21 @@ namespace schiffeversenkenFOI
         
             public bool Place_ship(byte type, bool richtung, string koordinate) //Hier werden die Schiffe plaziert und ein bool zurückgegeben true = ein Fehler, false = alles Okay
             {
-                char[,] backup = casket;                                        //das Feld wird in backup gespeichert
+                char[,] backup = box;                                        //das Feld wird in backup gespeichert
                 byte spalte = (byte)(Convert.ToInt32(koordinate[0]) - 97);      //hier wird der Buchstabe einer Koordinate in ein byte umgewandelt, um so den index herauszufinden. a ist als int 97 allerdings soll dies index 0 bedeuten, also wird - 97 gerechenet. Die Zahl wird in einem byte gespeichert, da es weniger platz braucht
                 byte zeile = (byte)(Convert.ToInt32(koordinate[1]) - 48);       //hier die Nummer einer Koordinate in ein byte umgewandelt, um so den index herauszufinden. 0 ist als int 48 allerdings soll dies index 0 bedeuten, also wird - 48 gerechenet. Die Zahl wird in einem byte gespeichert, da es weniger platz braucht
 
                 if (!richtung)                                                  //hier wird darauf geachtet, ob das Schiff vertikal oder Horizontal ist
                 {
-                    if (spalte + type < 11)
-                    {
-                        for (byte extrapart = 0; extrapart < type; extrapart++)     //hier wird dei größe des Schiffes angepasst
+                    if (spalte + type < 11) for (byte extrapart = 0; extrapart < type; extrapart++)     //hier wird dei größe des Schiffes angepasst
                         {
-                            if ((casket[zeile, spalte + extrapart] == '#'))           //falls das ausgewählte Feld schon besetzt ist passiert:
+                            if ((box[zeile, spalte + extrapart] == '#'))           //falls das ausgewählte Feld schon besetzt ist passiert:
                             {
-                                casket = backup;                                    //casket wird mit dem backup überschrieben
+                                box = backup;                                    //box wird mit dem backup überschrieben
                                 return true;                                        //und es wird ein Fehler zurückgegeben
                             }
-                            casket[zeile, spalte + extrapart] = '#';                //Falls das Feld nicht schon beansprucht ist wird ein Schiffzeichen an dieser Stelle gesetzt
+                            box[zeile, spalte + extrapart] = '#';                //Falls das Feld nicht schon beansprucht ist wird ein Schiffzeichen an dieser Stelle gesetzt
                         }
-                    }
                     else
                     {
                         return true;                                            //Falls das Schiff nicht rein passt wird ein Fehler zurückgegeben
@@ -283,19 +297,15 @@ namespace schiffeversenkenFOI
                 }
                 else                                                            //Im Else block wird der code ausgeführt welcher für die Vertikalen zuständig ist.
                 {
-                    if (zeile + type < 11)
-                    {
-                        for (byte extrapart = 0; extrapart < type; extrapart++)     //hier wird dei größe des Schiffes angepasst
+                    if (zeile + type < 11) for (byte extrapart = 0; extrapart < type; extrapart++)     //hier wird dei größe des Schiffes angepasst
                         {
-
-                            if ((casket[zeile + extrapart, spalte] == '#'))           //falls das ausgewählte Feld schon besetzt ist passiert: 
+                            if ((box[zeile + extrapart, spalte] == '#'))           //falls das ausgewählte Feld schon besetzt ist passiert: 
                             {
-                                casket = backup;                                    //casket wird mit dem backup überschrieben
+                                box = backup;                                    //box wird mit dem backup überschrieben
                                 return true;                                        //und es wird ein Fehler zurückgegeben
                             }
-                            casket[zeile + extrapart, spalte] = '#';                //Falls das Feld nicht schon beansprucht ist wird ein Schiffzeichen an dieser Stelle gesetzt
+                            box[zeile + extrapart, spalte] = '#';                //Falls das Feld nicht schon beansprucht ist wird ein Schiffzeichen an dieser Stelle gesetzt
                         }
-                    }
                     else
                     {
                         return true;                                        //Falls das Schiff nicht rein passt wird ein Fehler zurückgegeben
